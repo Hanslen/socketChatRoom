@@ -1,7 +1,9 @@
 <!doctype html>
 <html>
   <head>
+  	<meta charset="utf-8">
     <title>聊天室wow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
@@ -14,9 +16,14 @@
     </style>
   </head>
   <body>
-    <ul id="messages"></ul>
+  	<h1 align="center">神秘聊天室：）</h1>
+  	<div id="container">
+   	 	<ul id="messages"></ul>
+    	<div style="height:100px"></div>
+    </div>
     <form action="">
       <input id="m" autocomplete="off" />
+      <select id="username"></select>
       <button>Send</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
@@ -24,18 +31,50 @@
 	<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
 	<script>
 		  var socket = io();
+		  var nickname;
 		  $('form').submit(function(){
-		    socket.emit('chat message', $('#m').val());
+		    socket.emit('chat message', $('#m').val(), $('#username').val());
 		    $('#m').val('');
 		    return false;
 		  });
 		  socket.on('connect', function(data){
-		  	nickname = prompt("Please type your nickname: ");
-		  	socket.emit('join', nickname);
+		  	socket.on("usersfirst", function(user){
+		  		do{
+		  		var ok = 1;
+		  		nickname = prompt("Please type your nickname: ");
+		  		// console.log(usernames);
+		  		for(var i = 0; i < user.length; i++){
+		  			if(nickname == user[i]){
+		  				alert("This nickname has been registered, please try another");
+		  				nickname = "";
+						ok = 0;
+	 					break;
+	 				}
+	  			}
+		  		if(nickname != "" && ok == 1){
+		  			socket.emit('join', nickname);
+		  		}
+		  	}while(nickname == "");
+		  	});
 		  });
+		  socket.on('users', function(user){
+		  		$('#username').empty();
+		  		for(var i = 0; i < user.length; i++){
+		  			if(nickname != user[i]){
+		  				$('#username').append($('<option>').text(user[i]));
+		  			}
+		  		}
+		  	});
 		  socket.on('chat message', function(msg){
     		$('#messages').append($('<li>').text(msg));
+    		getBottom();
   		  });
+  		  function getBottom(){
+  		  	$("html, body").animate({
+  		  			scrollTop: $("#container").height()
+  		 		 }, 1);
+  		  };
+  		  
 	</script>
   </body>
 </html>
